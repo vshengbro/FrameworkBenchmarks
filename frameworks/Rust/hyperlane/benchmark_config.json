@@ -1,6 +1,6 @@
 {
   "framework": "hyperlane",
-  "maintainers": ["eastspire"],
+  "maintainers": ["vshengbro"],
   "tests": [
     {
       "default": {

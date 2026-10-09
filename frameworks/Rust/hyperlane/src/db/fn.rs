@@ -8,7 +8,7 @@ pub(crate) fn get_db_connection() -> &'static DbPoolConnection {
 #[cfg(feature = "dev")]
 pub(crate) async fn create_database() {
     let db_pool: &DbPoolConnection = get_db_connection();
-    let _ = db_query(&format!("CREATE DATABASE {DATABASE_NAME};"))
+    let _ = db_query(AssertSqlSafe(format!("CREATE DATABASE {DATABASE_NAME};")))
         .execute(db_pool)
         .await;
 }
@@ -16,18 +16,18 @@ pub(crate) async fn create_database() {
 #[cfg(feature = "dev")]
 pub(crate) async fn create_table() {
     let db_pool: &DbPoolConnection = get_db_connection();
-    let _ = db_query(&format!(
+    let _ = db_query(AssertSqlSafe(format!(
         "CREATE TABLE IF NOT EXISTS {TABLE_NAME_WORLD} (
             id SERIAL PRIMARY KEY, randomNumber INT NOT NULL
         );"
-    ))
+    )))
     .execute(db_pool)
     .await;
-    let _ = db_query(&format!(
+    let _ = db_query(AssertSqlSafe(format!(
         "CREATE TABLE IF NOT EXISTS {TABLE_NAME_FORTUNE} (
             id SERIAL PRIMARY KEY, message VARCHAR NOT NULL
         );"
-    ))
+    )))
     .execute(db_pool)
     .await;
 }
@@ -35,10 +35,12 @@ pub(crate) async fn create_table() {
 #[cfg(feature = "dev")]
 pub(crate) async fn insert_records() {
     let db_pool: &DbPoolConnection = get_db_connection();
-    let row: PgRow = db_query(&format!("SELECT COUNT(*) FROM {TABLE_NAME_WORLD}"))
-        .fetch_one(db_pool)
-        .await
-        .unwrap();
+    let row: PgRow = db_query(AssertSqlSafe(format!(
+        "SELECT COUNT(*) FROM {TABLE_NAME_WORLD}"
+    )))
+    .fetch_one(db_pool)
+    .await
+    .unwrap();
     let count: i64 = row.get(0);
     let limit: i64 = RANDOM_MAX as i64;
     if count >= limit {
@@ -54,7 +56,7 @@ pub(crate) async fn insert_records() {
         "INSERT INTO {TABLE_NAME_WORLD} (id, randomNumber) VALUES {}",
         values.join(",")
     );
-    let _ = db_query(&sql).execute(db_pool).await;
+    let _ = db_query(AssertSqlSafe(sql)).execute(db_pool).await;
     let mut values: Vec<String> = Vec::new();
     for _ in 0..missing_count {
         let random_number: i32 = get_random_id();
@@ -64,14 +66,14 @@ pub(crate) async fn insert_records() {
         "INSERT INTO {TABLE_NAME_FORTUNE} (id, message) VALUES {}",
         values.join(",")
     );
-    let _ = db_query(&sql).execute(db_pool).await;
+    let _ = db_query(AssertSqlSafe(sql)).execute(db_pool).await;
 }
 
 pub(crate) async fn init_cache() -> Vec<QueryRow> {
     let mut res: Vec<QueryRow> = Vec::with_capacity(RANDOM_MAX as usize);
     let db_pool: &DbPoolConnection = get_db_connection();
     let sql: String = format!("SELECT id, randomNumber FROM {TABLE_NAME_WORLD} LIMIT {RANDOM_MAX}");
-    if let Ok(rows) = db_query(&sql).fetch_all(db_pool).await {
+    if let Ok(rows) = db_query(AssertSqlSafe(sql)).fetch_all(db_pool).await {
         for row in rows {
             let id: i32 = row.get(KEY_ID);
             let random_number: i32 = row.get(KEY_RANDOM_NUMBER);
@@ -166,7 +168,10 @@ pub(crate) async fn update_world_rows(limit: Queries) -> Vec<QueryRow> {
 pub(crate) async fn all_world_row() -> Vec<PgRow> {
     let db_pool: &DbPoolConnection = get_db_connection();
     let sql: String = format!("SELECT id, message FROM {TABLE_NAME_FORTUNE}");
-    let res: Vec<PgRow> = db_query(&sql).fetch_all(db_pool).await.unwrap_or_default();
+    let res: Vec<PgRow> = db_query(AssertSqlSafe(sql))
+        .fetch_all(db_pool)
+        .await
+        .unwrap_or_default();
     res
 }
 

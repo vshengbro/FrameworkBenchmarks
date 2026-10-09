@@ -21,7 +21,7 @@ use {
     serde::*,
     serde_json::{Value, json},
     sqlx::{
-        Pool, Postgres, Row,
+        AssertSqlSafe, Pool, Postgres, Row,
         postgres::{PgPoolOptions, PgRow},
         query as db_query,
     },

@@ -17,4 +17,7 @@ pub(crate) const KEY_MESSAGE: &str = "message";
 pub(crate) const DB_MAX_CONNECTIONS: u32 = 100;
 pub(crate) const QUERY_DB_QUERY_KEY: &str = "q";
 pub(crate) const UPDATE_DB_QUERY_KEY: &str = "q";
+
+/// HTTP `date` header name, lowercased per HTTP/2 convention.
+pub(crate) const DATE: &str = "date";
 pub(crate) const CACHE_QUERY_KEY: &str = "c";
